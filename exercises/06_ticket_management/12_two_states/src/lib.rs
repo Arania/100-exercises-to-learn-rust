@@ -11,6 +11,7 @@ use ticket_fields::{TicketDescription, TicketTitle};
 #[derive(Clone)]
 pub struct TicketStore {
     tickets: Vec<Ticket>,
+    counter: u64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -37,15 +38,35 @@ pub enum Status {
     Done,
 }
 
+impl TicketDraft {
+    // implement `into` to convert a `TicketDraft` into a `Ticket`
+    pub fn into(self, ticket_id: TicketId) -> Ticket {
+        Ticket {
+            id: ticket_id,
+            title: self.title,
+            description: self.description,
+            status: Status::ToDo,
+        }
+    }
+}
+
 impl TicketStore {
     pub fn new() -> Self {
         Self {
             tickets: Vec::new(),
+            counter: 0,
         }
     }
 
-    pub fn add_ticket(&mut self, ticket: Ticket) {
-        self.tickets.push(ticket);
+    pub fn add_ticket(&mut self, ticket: TicketDraft) -> TicketId {
+        let ticket_id = TicketId(self.counter);
+        self.counter += 1;
+        self.tickets.push(ticket.into(ticket_id));
+        ticket_id
+    }
+
+    pub fn get(&self, id: TicketId) -> Option<&Ticket> {
+        self.tickets.iter().find(|ticket| ticket.id == id)
     }
 }
 
